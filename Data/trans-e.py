@@ -1,14 +1,23 @@
 import snap
 import numpy as np
+import math
+import random
 Rnd = snap.TRnd(42)
 Rnd.Randomize()
 
 
 test = snap.TNEANet.New()
-def d(triple):
+test.AddNode(2)
+test.AddNode(3)
+test.AddNode(1)
+test.AddEdge(1,2,1)
+test.AddEdge(1,3,2)
+
+
+def d(triple, embeddings):
     head, relation, tail = triple
-    pred = [sum(t) for t in zip(embeddings[head], embeddings[relation])]
-    return np.linalg.norm(pred - embeddings[tail])
+    pred = [t[1]-t[0] for t in zip(embeddings[head], embeddings[tail])]
+    return np.dot(head, tail) + np.dot(relation, pred)
 
 def transe(graph, k, margin, batch_size, learning_rate, epochs):
     #create triplets, initialize embeddings
@@ -42,7 +51,7 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
         gradients = {}
         for pair in pairs:
             #take gradient of 
-            if margin+d(pair[0])-d(pair[1]) > 0:
+            if margin+d(pair[0], embeddings)-d(pair[1], embeddings) > 0:
                 #gradient of L
                 if pair[0][1] not in gradients:
                     gradients[pair[0][1]] = embeddings[pair[0][2]] - embeddings[pair[0][0]] - (embeddings[pair[1][2]] - embeddings[pair[1][0]])
@@ -81,4 +90,6 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
 
         for key in embeddings:
             embeddings[key] = embeddings[key] + learning_rate*gradients[key]
-                
+    return embeddings
+
+print(transe(test, 2, 1, 1, 0.01, 50))
