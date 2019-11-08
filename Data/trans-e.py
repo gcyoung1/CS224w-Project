@@ -29,7 +29,7 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
         #what is the attribute?
         init = np.random.uniform(-6/math.sqrt(k), 6/math.sqrt(k), k)
         embeddings[graph.GetStrAttrDatE(edge, "kind")] = init/np.sqrt(init.dot(init))
-        triplets.append((edge.GetSrcNId(), graph.GetStrAttrDatE(edge, "kind"), edge.GetSrcNId()))
+        triplets.append((edge.GetSrcNId(), graph.GetStrAttrDatE(edge, "kind"), edge.GetDstNId()))
     for node in graph.Nodes():
         embeddings[node.GetId()] = np.random.uniform(-6/math.sqrt(k), 6/math.sqrt(k), k)
 
