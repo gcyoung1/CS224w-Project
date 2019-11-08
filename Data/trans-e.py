@@ -26,8 +26,8 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
     for edge in graph.Edges():
         #what is the attribute?
         init = np.random.uniform(-6/math.sqrt(k), 6/math.sqrt(k), k)
-        embeddings[graph.GetStrAttrDatE(edge, Attr)] = init/np.sqrt(init.dot(init))
-        triplets.append((edge.GetSrcNId(), graph.GetStrAttrDatE(edge, Attr), edge.GetSrcNId()))
+        embeddings[graph.GetStrAttrDatE(edge, "kind")] = init/np.sqrt(init.dot(init))
+        triplets.append((edge.GetSrcNId(), graph.GetStrAttrDatE(edge, "kind"), edge.GetSrcNId()))
     for node in graph.Nodes():
         embeddings[node.GetId()] = np.random.uniform(-6/math.sqrt(k), 6/math.sqrt(k), k)
 
