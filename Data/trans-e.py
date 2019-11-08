@@ -35,7 +35,7 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
         #normalize entity embeddings
         for node in graph.Nodes():
             embeddings[node.GetId()] = embeddings[node.GetId()]/np.sqrt(embeddings[node.GetId()].dot(embeddings[node.GetId()]))
-        batch = sample(triplets, batch_size)
+        batch = np.sample(triplets, batch_size)
         pairs = []
         corruptTail = False
         #create batch with good and fraud triples
