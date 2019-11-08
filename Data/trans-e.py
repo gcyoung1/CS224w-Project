@@ -17,7 +17,7 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
     for edge in graph.Edges():
         #what is the attribute?
         init = np.random.uniform(-6/math.sqrt(k), 6/math.sqrt(k), k)
-        embeddings[graph.GetStrAttrDatE(edge, Attr)] = init/np.sqrt(x.dot(x))
+        embeddings[graph.GetStrAttrDatE(edge, "kind")] = init/np.sqrt(x.dot(x))
         triplets.append((edge.GetSrcNId(), graph.GetStrAttrDatE(edge, Attr), edge.GetSrcNId()))
     for node in graph.Nodes():
         embeddings[node.GetId()] = np.random.uniform(-6/math.sqrt(k), 6/math.sqrt(k), k)
@@ -69,14 +69,14 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
                 if not corruptTail:
                     if pair[1][0] not in gradients:
                         gradients[pair[1][0]] =  embeddings[pair[0][2]] - embeddings[pair[0][1]]
-                     else:
+                    else:
                         gradients[pair[1][0]] = gradients[pair[1][0]] + embeddings[pair[0][2]] - embeddings[pair[0][1]]
 
                 #gradient of corrupted tail
                 if corruptTail:
                     if pair[1][2] not in gradients:
                         gradients[pair[1][2]] =  embeddings[pair[0][0]] + embeddings[pair[0][1]]
-                     else:
+                    else:
                         gradients[pair[1][2]] = gradients[pair[1][2]] + embeddings[pair[0][0]] + embeddings[pair[0][1]]
 
         for key in embeddings:
