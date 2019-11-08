@@ -1,11 +1,13 @@
 import sqlite_process as sp
 import snap
 TN = snap.TNEANet
+saveFileName = "soccer.graph"
 
 
+def load_tneanet():
+    return TN.Load(snap.TFIn(saveFileName))
 
-
-def create_tneanet():
+def create_tneanet(save = True):
     meta, matches = sp.loadPickle()
     numNodes = len(matches) + len(meta.player) + len(meta.team) + len(meta.country)
     numEdges = 3 * len(matches) + 4 * len(meta.player) + len(meta.team)
@@ -56,6 +58,8 @@ def create_tneanet():
         EId = G.AddEdge(i, countryToNId[match.countryId])
         G.AddStrAttrDatE(EId, "match in", "kind")
         i+=1
+    if save:
+        G.Save(snap.TFOut(saveFileName))
     return G
 
 
