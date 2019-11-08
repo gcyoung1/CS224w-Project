@@ -2,7 +2,7 @@ import snap
 import numpy as np
 import math
 import random
-Rnd = snap.TRnd(42)
+Rnd = snap.TRnd(37349)
 Rnd.Randomize()
 
 
