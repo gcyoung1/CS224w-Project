@@ -1,14 +1,23 @@
 import snap
 import numpy as np
+import math
+import random
 Rnd = snap.TRnd(42)
 Rnd.Randomize()
 
 
 test = snap.TNEANet.New()
-def d(triple):
+test.AddNode(2)
+test.AddNode(3)
+test.AddNode(1)
+test.AddEdge(1,2,1)
+test.AddEdge(1,3,2)
+
+
+def d(triple, embeddings):
     head, relation, tail = triple
-    pred = [sum(t) for t in zip(embeddings[head], embeddings[relation])]
-    return np.linalg.norm(pred - embeddings[tail])
+    pred = [t[1]-t[0] for t in zip(embeddings[head], embeddings[tail])]
+    return np.dot(head, tail) + np.dot(relation, pred)
 
 def transe(graph, k, margin, batch_size, learning_rate, epochs):
     #create triplets, initialize embeddings
@@ -17,7 +26,7 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
     for edge in graph.Edges():
         #what is the attribute?
         init = np.random.uniform(-6/math.sqrt(k), 6/math.sqrt(k), k)
-        embeddings[graph.GetStrAttrDatE(edge, Attr)] = init/np.sqrt(x.dot(x))
+        embeddings[graph.GetStrAttrDatE(edge, Attr)] = init/np.sqrt(init.dot(init))
         triplets.append((edge.GetSrcNId(), graph.GetStrAttrDatE(edge, Attr), edge.GetSrcNId()))
     for node in graph.Nodes():
         embeddings[node.GetId()] = np.random.uniform(-6/math.sqrt(k), 6/math.sqrt(k), k)
@@ -42,7 +51,7 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
         gradients = {}
         for pair in pairs:
             #take gradient of 
-            if margin+d(pair[0])-d(pair[1]) > 0:
+            if margin+d(pair[0], embeddings)-d(pair[1], embeddings) > 0:
                 #gradient of L
                 if pair[0][1] not in gradients:
                     gradients[pair[0][1]] = embeddings[pair[0][2]] - embeddings[pair[0][0]] - (embeddings[pair[1][2]] - embeddings[pair[1][0]])
@@ -69,16 +78,18 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
                 if not corruptTail:
                     if pair[1][0] not in gradients:
                         gradients[pair[1][0]] =  embeddings[pair[0][2]] - embeddings[pair[0][1]]
-                     else:
+                    else:
                         gradients[pair[1][0]] = gradients[pair[1][0]] + embeddings[pair[0][2]] - embeddings[pair[0][1]]
 
                 #gradient of corrupted tail
                 if corruptTail:
                     if pair[1][2] not in gradients:
                         gradients[pair[1][2]] =  embeddings[pair[0][0]] + embeddings[pair[0][1]]
-                     else:
+                    else:
                         gradients[pair[1][2]] = gradients[pair[1][2]] + embeddings[pair[0][0]] + embeddings[pair[0][1]]
 
         for key in embeddings:
             embeddings[key] = embeddings[key] + learning_rate*gradients[key]
-                
+    return embeddings
+
+print(transe(test, 2, 1, 1, 0.01, 50))
