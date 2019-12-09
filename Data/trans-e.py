@@ -6,7 +6,7 @@ import create_tneanet
 Rnd = snap.TRnd(37349)
 Rnd.Randomize()
 
-#realDeal = create_tneanet.load_tneanet()
+realDeal = create_tneanet.load_tneanet()
 
 test = snap.TNEANet.New()
 test.AddNode(2)
@@ -38,60 +38,56 @@ def transe(graph, k, margin, batch_size, learning_rate, epochs):
         for node in graph.Nodes():
             embeddings[node.GetId()] = embeddings[node.GetId()]/np.sqrt(embeddings[node.GetId()].dot(embeddings[node.GetId()]))
         batch = np.sample(triplets, batch_size)
-        pairs = []
-        corruptTail = False
+        gradients = {}
         #create batch with good and fraud triples
         for trip in batch:
+            corruptTail = False
             if random.randint(0,1):
                 corruptTail = True
                 newTrip = (trip[0], trip[1], graph.GetRndNId(Rnd))
             else:
                 newTrip = (graph.GetRndNId(Rnd), trip[1], trip[2])
-            pairs.append((trip,newTrip))
 
-        #compute loss
-        gradients = {}
-        for pair in pairs:
-            #take gradient of 
-            if margin+d(pair[0], embeddings)-d(pair[1], embeddings) > 0:
+            #compute loss
+            if margin+d(trip, embeddings)-d(newTrip, embeddings) > 0:
                 #gradient of L
-                if pair[0][1] not in gradients:
-                    gradients[pair[0][1]] = embeddings[pair[0][2]] - embeddings[pair[0][0]] - (embeddings[pair[1][2]] - embeddings[pair[1][0]])
+                if trip[1] not in gradients:
+                    gradients[trip[1]] = embeddings[trip[2]] - embeddings[trip[0]] - (embeddings[newTrip[2]] - embeddings[newTrip[0]])
                 else:
-                    gradients[pair[0][1]] = gradients[pair[0][1]] + (embeddings[pair[0][2]] - embeddings[pair[0][0]] - (embeddings[pair[1][2]] - embeddings[pair[1][0]]))
+                    gradients[trip[1]] = gradients[trip[1]] + (embeddings[trip[2]] - embeddings[trip[0]] - (embeddings[newTrip[2]] - embeddings[newTrip[0]]))
                 
                 #gradient of head
-                temp = embeddings[pair[0][2]] - embeddings[pair[0][1]]
-                if corruptTail: temp = temp - (embeddings[pair[1][2]] - embeddings[pair[0][1]])
-                if pair[0][0] not in gradients:
-                    gradients[pair[0][0]] =  temp
+                temp = embeddings[trip[2]] - embeddings[trip[1]]
+                if corruptTail: temp = temp - (embeddings[newTrip[2]] - embeddings[trip[1]])
+                if trip[0] not in gradients:
+                    gradients[trip[0]] =  temp
                 else:
-                    gradients[pair[0][0]] = gradients[pair[0][0]] + temp
+                    gradients[trip[0]] = gradients[trip[0]] + temp
 
                 #gradient of tail
-                temp = embeddings[pair[0][0]] + embeddings[pair[0][1]]
-                if not corruptTail: temp = temp - (embeddings[pair[1][0]] + embeddings[pair[0][1]])
-                if pair[0][2] not in gradients:
-                    gradients[pair[0][2]] =  temp
+                temp = embeddings[trip[0]] + embeddings[trip[1]]
+                if not corruptTail: temp = temp - (embeddings[newTrip[0]] + embeddings[trip[1]])
+                if trip[2] not in gradients:
+                    gradients[trip[2]] =  temp
                 else:
-                    gradients[pair[0][2]] = gradients[pair[0][2]] + temp
+                    gradients[trip[2]] = gradients[trip[2]] + temp
 
                 #gradient of corrupted head
                 if not corruptTail:
-                    if pair[1][0] not in gradients:
-                        gradients[pair[1][0]] =  embeddings[pair[0][2]] - embeddings[pair[0][1]]
+                    if newTrip[0] not in gradients:
+                        gradients[newTrip[0]] =  embeddings[trip[2]] - embeddings[trip[1]]
                     else:
-                        gradients[pair[1][0]] = gradients[pair[1][0]] + embeddings[pair[0][2]] - embeddings[pair[0][1]]
+                        gradients[newTrip[0]] = gradients[newTrip[0]] + embeddings[trip[2]] - embeddings[trip[1]]
 
                 #gradient of corrupted tail
                 if corruptTail:
-                    if pair[1][2] not in gradients:
-                        gradients[pair[1][2]] =  embeddings[pair[0][0]] + embeddings[pair[0][1]]
+                    if newTrip[2] not in gradients:
+                        gradients[newTrip[2]] =  embeddings[trip[0]] + embeddings[trip[1]]
                     else:
-                        gradients[pair[1][2]] = gradients[pair[1][2]] + embeddings[pair[0][0]] + embeddings[pair[0][1]]
+                        gradients[newTrip[2]] = gradients[newTrip[2]] + embeddings[trip[0]] + embeddings[trip[1]]
 
         for key in embeddings:
             embeddings[key] = embeddings[key] + learning_rate*gradients[key]
     return embeddings
 
-print(transe(test, 2, 1, 1, 0.01, 50))
+print(transe(realDeal, 2, 1, 1, 0.01, 50))
